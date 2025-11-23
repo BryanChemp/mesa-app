@@ -125,6 +125,8 @@ export const Board: React.FC = () => {
               <DiceMiniContainer key={diceKey}>
                 <DiceScene
                   roll={roll}
+                  diceCount={6}
+                  diceType={6}
                   onResult={(n) => {
                     console.log("dice result", n)
                     setDiceResult(n)
