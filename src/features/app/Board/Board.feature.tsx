@@ -1,16 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useCanvasNavigation } from './hooks/useCanvasNavigation';
+import Canvas from '../Canvas/Canvas';
 
 export const Board: React.FC = () => {
-  const {
-    zoom,
-    position,
-    isDragging,
-    containerRef,
-    handleMouseDown,
-    resetView,
-  } = useCanvasNavigation();
 
   const testElements = [
     { id: 1, x: 100, y: 100, size: 50, color: '#5A7DFE', label: 'Elemento 1' },
@@ -22,17 +14,8 @@ export const Board: React.FC = () => {
   ];
 
   return (
-    <Container 
-      ref={containerRef}
-      onMouseDown={handleMouseDown}
-      $isDragging={isDragging}
-    >
-      <CanvasContainer 
-        style={{ 
-          transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
-          transformOrigin: 'center center'
-        }}
-      >
+    <Container>
+      <Canvas>
         <Grid />
         
         {testElements.map(element => (
@@ -51,24 +34,12 @@ export const Board: React.FC = () => {
         ))}
 
         <CenterPoint />
-      </CanvasContainer>
-
-      <Controls>
-        <ZoomIndicator>
-          Zoom: {(zoom * 100).toFixed(0)}%
-        </ZoomIndicator>
-        <PositionIndicator>
-          Pos: {position.x.toFixed(0)}, {position.y.toFixed(0)}
-        </PositionIndicator>
-        <ResetButton onClick={resetView}>
-          Resetar Vista
-        </ResetButton>
-      </Controls>
+      </Canvas>
     </Container>
   );
 };
 
-const Container = styled.div<{ $isDragging: boolean }>`
+const Container = styled.div<{ $isDragging?: boolean }>`
   flex: 1;
   height: 100%;
   background-color: ${props => props.theme.colors.card};
@@ -86,19 +57,6 @@ const Container = styled.div<{ $isDragging: boolean }>`
   &:active {
     cursor: grabbing;
   }
-`;
-
-const CanvasContainer = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  transition: transform 0.1s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 `;
 
 const Grid = styled.div`
@@ -145,50 +103,4 @@ const CenterPoint = styled.div`
   background: #EF4444;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-`;
-
-const Controls = styled.div`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 10;
-`;
-
-const ZoomIndicator = styled.div`
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: bold;
-  text-align: center;
-`;
-
-const PositionIndicator = styled.div`
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: bold;
-  text-align: center;
-`;
-
-const ResetButton = styled.button`
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s ease;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
 `;
