@@ -13,10 +13,14 @@
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.0",
+    "@react-three/fiber": "^9.4.0",
+    "@react-three/rapier": "^2.2.0",
+    "@types/three": "^0.181.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.6",
     "styled-components": "^6.1.19",
+    "three": "^0.181.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
