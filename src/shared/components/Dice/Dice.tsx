@@ -47,50 +47,109 @@ const generateFaceNormals = (type: DiceType) => {
   return []
 }
 
+const randomBetween = (min:number, max:number)=> Math.random()*(max-min)+min
+
+
 const DiceSingle = ({ roll, type, onResult, initialPosition }: DiceSingleProps) => {
   const bodyRef = useRef<RapierRigidBody>(null)
   const faceNormals = useRef(generateFaceNormals(type))
   const stoppedRef = useRef(false)
 
+  const spawnHeight = 14
+
+  const doThrow = () => {
+    if (!bodyRef.current) return
+
+    stoppedRef.current = false
+
+    const pos = new THREE.Vector3(
+      randomBetween(-1.0, 1.0),
+      spawnHeight,
+      randomBetween(-1.0, 1.0)
+    )
+    bodyRef.current.setTranslation(pos, true)
+
+    const eul = new THREE.Euler(
+      randomBetween(0, Math.PI * 2),
+      randomBetween(0, Math.PI * 2),
+      randomBetween(0, Math.PI * 2)
+    )
+    const q = new THREE.Quaternion().setFromEuler(eul)
+    bodyRef.current.setRotation(q, true)
+
+    bodyRef.current.setLinvel(
+      {
+        x: randomBetween(-3.5, 3.5),
+        y: randomBetween(-15, -10),   // força para BAIXO
+        z: randomBetween(-3.5, 3.5)
+      },
+      true
+    )
+
+    bodyRef.current.setAngvel(
+      {
+        x: randomBetween(-18, 18),
+        y: randomBetween(-18, 18),
+        z: randomBetween(-18, 18)
+      },
+      true
+    )
+  }
+
   useEffect(() => {
     if (!roll || !bodyRef.current) return
-    stoppedRef.current = false
-    const impulse = { x:(Math.random()-0.5)*2, y:0, z:(Math.random()-0.5)*2 }
-    const torque = { x:(Math.random()-0.5)*5, y:(Math.random()-0.5)*5, z:(Math.random()-0.5)*5 }
-    bodyRef.current.applyImpulse(impulse,true)
-    bodyRef.current.applyTorqueImpulse(torque,true)
+    doThrow()
   }, [roll])
 
+  // detectar parada
   useEffect(() => {
     const interval = setInterval(() => {
-      if(!bodyRef.current || stoppedRef.current) return
+      if (!bodyRef.current || stoppedRef.current) return
+
       const lin = bodyRef.current.linvel()
       const ang = bodyRef.current.angvel()
-      const isStopped = Math.abs(lin.x)<0.01 && Math.abs(lin.y)<0.01 && Math.abs(lin.z)<0.01 &&
-                        Math.abs(ang.x)<0.01 && Math.abs(ang.y)<0.01 && Math.abs(ang.z)<0.01
-      if(isStopped){
+
+      const speed = Math.sqrt(lin.x**2 + lin.y**2 + lin.z**2)
+      const rot = Math.sqrt(ang.x**2 + ang.y**2 + ang.z**2)
+
+      if (speed < 0.05 && rot < 0.05) {
         stoppedRef.current = true
+
         const r = bodyRef.current.rotation()
-        const quat = new THREE.Quaternion(r.x,r.y,r.z,r.w)
-        let best:number|null = null
-        let bestDot = -Infinity
-        for(const f of faceNormals.current){
-          const v = f.normal.clone().applyQuaternion(quat)
-          const d = v.dot(new THREE.Vector3(0,1,0))
-          if(d>bestDot){ bestDot=d; best=f.number }
+        const q = new THREE.Quaternion(r.x, r.y, r.z, r.w)
+
+        let bestFace = 1
+        let bestDot = -999
+
+        for (const f of faceNormals.current) {
+          const v = f.normal.clone().applyQuaternion(q)
+          const d = v.dot(new THREE.Vector3(0, 1, 0))
+          if (d > bestDot) {
+            bestDot = d
+            bestFace = f.number
+          }
         }
-        if(best) onResult(best)
+
+        onResult(bestFace)
       }
-    }, 100)
-    return ()=>clearInterval(interval)
+    }, 90)
+
+    return () => clearInterval(interval)
   }, [onResult])
 
-  const geometry = type===6 ? new THREE.BoxGeometry(1,1,1) : new THREE.IcosahedronGeometry(1,0)
-  const material = new THREE.MeshStandardMaterial({ color:'#6D5DFB', metalness:0.3, roughness:0.4 })
+  const geometry = type === 6
+    ? new THREE.BoxGeometry(1, 1, 1)
+    : new THREE.IcosahedronGeometry(1, 0)
+
+  const material = new THREE.MeshStandardMaterial({
+    color: '#6D5DFB',
+    metalness: 0.3,
+    roughness: 0.4
+  })
 
   return (
-    <RigidBody ref={bodyRef} colliders="hull" restitution={0.6} position={initialPosition}>
-      <mesh geometry={geometry} material={material} />
+    <RigidBody ref={bodyRef} colliders="hull" restitution={0.4} friction={0.8}>
+      <mesh geometry={geometry} material={material}/>
     </RigidBody>
   )
 }
@@ -113,14 +172,52 @@ export const DiceScene = ({ roll, diceCount, diceType, onResult }: DiceSceneProp
   }
 
   return (
-    <Canvas camera={{ position:[0,12,0], fov:50, up:[0,0,-1] }}>
-      <ambientLight intensity={0.5}/>
-      <directionalLight intensity={1} position={[5,10,5]}/>
+    <Canvas
+      camera={{
+        position:[0,22,0],
+        fov:50,
+        rotation:[-Math.PI/2,0,0]
+      }}
+    >
+      <ambientLight intensity={0.6}/>
+      <directionalLight intensity={1} position={[10,20,10]}/>
+
       <Physics gravity={[0,-9.8,0]}>
+
+        {/* chão */}
         <RigidBody type="fixed">
-          <mesh position={[0,0,0]}>
-            <boxGeometry args={[15,1,15]}/>
+          <mesh position={[0,-0.5,0]}>
+            <boxGeometry args={[16,1,16]}/>
             <meshStandardMaterial color="#222"/>
+          </mesh>
+        </RigidBody>
+
+        {/* paredes invisíveis */}
+        <RigidBody type="fixed">
+          <mesh position={[0,3,8]}>
+            <boxGeometry args={[16,6,1]}/>
+            <meshStandardMaterial transparent opacity={0}/>
+          </mesh>
+        </RigidBody>
+
+        <RigidBody type="fixed">
+          <mesh position={[0,3,-8]}>
+            <boxGeometry args={[16,6,1]}/>
+            <meshStandardMaterial transparent opacity={0}/>
+          </mesh>
+        </RigidBody>
+
+        <RigidBody type="fixed">
+          <mesh position={[8,3,0]}>
+            <boxGeometry args={[1,6,16]}/>
+            <meshStandardMaterial transparent opacity={0}/>
+          </mesh>
+        </RigidBody>
+
+        <RigidBody type="fixed">
+          <mesh position={[-8,3,0]}>
+            <boxGeometry args={[1,6,16]}/>
+            <meshStandardMaterial transparent opacity={0}/>
           </mesh>
         </RigidBody>
 
@@ -130,9 +227,10 @@ export const DiceScene = ({ roll, diceCount, diceType, onResult }: DiceSceneProp
             roll={roll}
             type={diceType}
             onResult={(n)=>handleSingleResult(n,i)}
-            initialPosition={[Math.random()*10-5, 5 + i*2, Math.random()*10-5]}
+            initialPosition={[0,10,0]}
           />
         ))}
+
       </Physics>
     </Canvas>
   )
