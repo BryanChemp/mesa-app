@@ -17,7 +17,7 @@ export const Mesa: React.FC = () => {
           </BoardContainer>
         </LeftColumn>
         <RightColumn>
-          <ToolBar isMaster={true} />
+          <ToolBar isMaster={false} />
         </RightColumn>  
       </MesaContainer>
     </Container>
