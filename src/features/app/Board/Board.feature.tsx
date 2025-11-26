@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import Canvas from '../Canvas/Canvas'
-import { DiceScene } from '../../../shared/components/Dice/Dice'
+import Dice3D from '../../../shared/components/Dice/Dice'
 
 export const Board: React.FC = () => {
   const [diceKey, setDiceKey] = useState(0);
@@ -123,14 +123,13 @@ export const Board: React.FC = () => {
 
             <PanelBody>
               <DiceMiniContainer key={diceKey}>
-                <DiceScene
-                  roll={roll}
-                  diceCount={6}
-                  diceType={6}
-                  onResult={(n) => {
-                    console.log("dice result", n)
-                    setDiceResult(n)
-                    setRoll(false)
+                <Dice3D
+                  key={diceKey}
+                  expression={"10d20"}
+                  autoRoll={true}
+                  onResult={(result) => {
+                    setDiceResult(result);
+                    console.log("Resultado do dado:", result);
                   }}
                 />
               </DiceMiniContainer>
@@ -271,12 +270,17 @@ const PanelBody = styled.div`
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  background-color: #792828da;
 `
 
 const DiceMiniContainer = styled.div`
-  width: 160px;
-  height: 160px;
-`
+  width: 200px;
+  height: 200px;
+  background: #612b2b;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+`;
 
 const ResultNumber = styled.div`
   color: white;
