@@ -33,10 +33,12 @@ const GRID_GAP = 0;
 
 const DraggableItem = ({
   item,
-  onMove
+  onMove,
+  onHover
 }: {
   item: Item;
   onMove: (item: Item, newX: number, newY: number) => void;
+  onHover?: (item: Item, newX: number, newY: number) => void;
 }) => {
   const nodeRef = useRef<HTMLDivElement | null>(null);
 
@@ -100,6 +102,7 @@ const Inventory = () => {
   });
 
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   const totalWeight = inventory.items.reduce((sum, item) => sum + item.weight, 0);
 
@@ -135,7 +138,7 @@ const Inventory = () => {
 
   const [, drop] = useDrop(() => ({
     accept: 'item',
-    drop: (draggedItem: DragItem, monitor) => {
+    hover: (draggedItem: DragItem, monitor) => {
       const client = monitor.getClientOffset() || monitor.getSourceClientOffset();
       if (!client || !gridRef.current) return;
       const gridRect = gridRef.current.getBoundingClientRect();
@@ -146,9 +149,14 @@ const Inventory = () => {
       let y = Math.round(topLeftPxY / CELL_SIZE) + 1;
       x = Math.max(1, Math.min(x, inventory.size.width - draggedItem.item.width + 1));
       y = Math.max(1, Math.min(y, inventory.size.height - draggedItem.item.height + 1));
-      handleItemMove(draggedItem.item, x, y);
+      setHoverPos({ x, y, width: draggedItem.item.width, height: draggedItem.item.height });
+    },
+    drop: (draggedItem: DragItem) => {
+      if (!hoverPos) return;
+      handleItemMove(draggedItem.item, hoverPos.x, hoverPos.y);
+      setHoverPos(null);
     }
-  }), [inventory]);
+  }), [inventory, hoverPos]);
 
   const findEmptyPosition = (width: number, height: number) => {
     for (let y = 1; y <= inventory.size.height - height + 1; y++) {
@@ -194,16 +202,19 @@ const Inventory = () => {
 
       <InventoryGridWrapper>
         <InventoryGrid
-          ref={(node) => {
-            gridRef.current = node;
-            drop(node);
-          }}
+          ref={(node) => { gridRef.current = node; drop(node); }}
           columns={inventory.size.width}
           rows={inventory.size.height}
           cellSize={CELL_SIZE}
         >
           {renderGrid()}
           {inventory.items.map(item => <DraggableItem key={item.id} item={item} onMove={handleItemMove} />)}
+          {hoverPos && <Placeholder style={{
+            left: `${(hoverPos.x - 1) * CELL_SIZE}px`,
+            top: `${(hoverPos.y - 1) * CELL_SIZE}px`,
+            width: `${hoverPos.width * CELL_SIZE}px`,
+            height: `${hoverPos.height * CELL_SIZE}px`
+          }} />}
         </InventoryGrid>
       </InventoryGridWrapper>
 
@@ -310,6 +321,14 @@ const Item = styled.div`
   box-sizing: border-box;
   &:hover { transform: scale(1.02); border-color: #85929e; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
   &:active { cursor: grabbing; }
+`;
+
+const Placeholder = styled.div`
+  position: absolute;
+  background: rgba(255,255,255,0.3);
+  border: 2px dashed #fff;
+  border-radius: 4px;
+  z-index: 1;
 `;
 
 const ItemImage = styled.img`
