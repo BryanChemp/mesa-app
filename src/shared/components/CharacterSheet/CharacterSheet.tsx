@@ -4,7 +4,8 @@ import styled from 'styled-components';
 interface CharacterField {
   label: string;
   value: string;
-  bonus?: string; // Nova propriedade opcional
+  bonus?: string;
+  emoji?: string;
 }
 
 interface CharacterSheetProps {
@@ -21,14 +22,14 @@ export const CharacterSheet = ({ characterId }: CharacterSheetProps) => {
       setTimeout(() => {
         const mockData: { [key: string]: CharacterField[] } = {
           '1': [
-            { label: 'Nome', value: 'Aragorn' },
+            { label: 'Nome', value: 'Aragorn', emoji: '👤' },
             { label: 'Raça', value: 'Humano' },
             { label: 'Classe', value: 'Ranger' },
             { label: 'Nível', value: '10' },
-            { label: 'Força', value: '18', bonus: '+4' },
+            { label: 'Força', value: '18', bonus: '+4', emoji: '💪' },
             { label: 'Destreza', value: '16', bonus: '+3' },
             { label: 'Constituição', value: '15', bonus: '+2' },
-            { label: 'Inteligência', value: '14', bonus: '+2' },
+            { label: 'Inteligência', value: '14', bonus: '+2', emoji: '🧠' },
             { label: 'Sabedoria', value: '17', bonus: '+3' },
             { label: 'Carisma', value: '16', bonus: '+3' },
             { label: 'Pontos de Vida', value: '85' },
@@ -115,7 +116,7 @@ export const CharacterSheet = ({ characterId }: CharacterSheetProps) => {
       <SheetGrid>
         {characterData.map((field, index) => (
           <Field key={index}>
-            <FieldLabel>{field.label}</FieldLabel>
+            <FieldLabel>{field.emoji || "▪️"}{" "}{field.label}</FieldLabel>
             <FieldValue>
               <ValueText>{field.value}</ValueText>
               {field.bonus && (
