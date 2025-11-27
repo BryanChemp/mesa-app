@@ -4,13 +4,20 @@ import { useCanvasStore } from "../../../stores/useCanvasStore"
 import { useCanvasZoom } from "./hooks/useCanvasZoom"
 import { useCanvasPan } from "./hooks/useCanvasPan"
 
-const Canvas: FC<PropsWithChildren> = ({ children }) => {
-  const { offset, scale } = useCanvasStore()
+interface CanvasProps extends PropsWithChildren {
+  id: string
+}
 
+const Canvas: FC<CanvasProps> = ({ id, children }) => {
+  const { getInstance } = useCanvasStore()
+  const instance = getInstance(id)
+
+  console.log("id", id)
+  console.log("instance", instance)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  useCanvasZoom(containerRef)
-  const { startDrag, stopDrag, onDrag } = useCanvasPan()
+  useCanvasZoom(containerRef, id)
+  const { startDrag, stopDrag, onDrag } = useCanvasPan(id)
 
   return (
     <Container
@@ -20,12 +27,14 @@ const Canvas: FC<PropsWithChildren> = ({ children }) => {
       onMouseUp={stopDrag}
       onMouseLeave={stopDrag}
       onMouseMove={onDrag}
+      data-canvas-id={id}
     >
       <CanvasWrapper
         style={{
-          transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-          transformOrigin: "0 0",
+          transform: `translate(${instance.offset.x}px, ${instance.offset.y}px) scale(${instance.scale})`,
+          transformOrigin: '0 0',
         }}
+        data-canvas-container="true"
       >
         {children}
       </CanvasWrapper>
@@ -53,4 +62,3 @@ const CanvasWrapper = styled.div`
   height: 100%;
   transform-origin: 0 0;
 `
-

@@ -1,7 +1,8 @@
 import styled from "styled-components";
 import { useState } from "react";
-import { CharacterSheet } from "../../../shared/components/CharacterSheet/CharacterSheet";
-import { Inventory } from "../../../shared/components/Inventory/Inventory";
+import { CharacterSheet } from "../CharacterSheet/CharacterSheet";
+import { Inventory } from "../Inventory/Inventory";
+import { Notes } from "../Notes/Notes";
 
 interface ToolBarComponentProps {
   isMaster?: boolean;
@@ -75,57 +76,12 @@ export const ToolBar: React.FC<ToolBarComponentProps> = ({ isMaster = false }) =
       <ToolContent>
         {currentView === 'ficha' && <CharacterSheet characterId="1" />}
         {currentView === 'inventario' && <Inventory />}
-        {currentView === 'notas' && <NotasScreen />}
+        {currentView === 'notas' && <Notes />}
       </ToolContent>
     </Container>
   );
 };
 
-// Componentes para as telas das funcionalidades
-const FichaScreen: React.FC = () => {
-  return (
-    <ScreenContainer>
-      <h4>Ficha do Personagem</h4>
-      <p>Aqui você pode visualizar e editar a ficha do seu personagem.</p>
-      <InfoBox>
-        <InfoItem>
-          <strong>Nome:</strong> Personagem Exemplo
-        </InfoItem>
-        <InfoItem>
-          <strong>Classe:</strong> Guerreiro
-        </InfoItem>
-        <InfoItem>
-          <strong>Nível:</strong> 1
-        </InfoItem>
-      </InfoBox>
-    </ScreenContainer>
-  );
-};
-
-const InventarioScreen: React.FC = () => {
-  return (
-    <ScreenContainer>
-      <h4>Inventário</h4>
-      <p>Gerencie os itens do seu personagem.</p>
-      <ItemList>
-        <Item>Espada Longa</Item>
-        <Item>Poção de Cura</Item>
-        <Item>Armadura de Couro</Item>
-        <Item>10 po de ouro</Item>
-      </ItemList>
-    </ScreenContainer>
-  );
-};
-
-const NotasScreen: React.FC = () => {
-  return (
-    <ScreenContainer>
-      <h4>Notas</h4>
-      <p>Anotações pessoais sobre a campanha.</p>
-      <NotesTextarea placeholder="Digite suas anotações aqui..." />
-    </ScreenContainer>
-  );
-};
 
 // Styled Components
 const Container = styled.div`
@@ -228,55 +184,4 @@ const ToolContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-`;
-
-const ScreenContainer = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const InfoBox = styled.div`
-  background-color: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 6px;
-  padding: 16px;
-`;
-
-const InfoItem = styled.div`
-  margin-bottom: 8px;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const ItemList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const Item = styled.div`
-  background-color: #F3F4F6;
-  border: 1px solid #E5E7EB;
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 14px;
-`;
-
-const NotesTextarea = styled.textarea`
-  flex: 1;
-  border: 1px solid #D1D5DB;
-  border-radius: 6px;
-  padding: 12px;
-  font-family: inherit;
-  font-size: 14px;
-  resize: none;
-  
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary};
-  }
 `;

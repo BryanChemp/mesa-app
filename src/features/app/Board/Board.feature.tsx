@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import Canvas from '../Canvas/Canvas'
-import Dice3D from '../../../shared/components/Dice/Dice'
+import Dice3D from '../Dice/Dice'
 
 export const Board: React.FC = () => {
   const [diceKey, setDiceKey] = useState(0);
@@ -93,7 +93,7 @@ export const Board: React.FC = () => {
         onContextMenu={handleBoardContextMenu} 
         onMouseDown={handleBoardMouseDown}
       >
-        <Canvas>
+        <Canvas id='board'>
           <Grid />
 
           {testElements.map((element) => (

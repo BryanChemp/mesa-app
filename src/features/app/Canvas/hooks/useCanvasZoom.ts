@@ -1,7 +1,10 @@
 import { useEffect } from "react"
 import { useCanvasStore } from "../../../../stores/useCanvasStore"
 
-export function useCanvasZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
+export function useCanvasZoom(
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  canvasId: string
+) {
   const { zoomAt } = useCanvasStore()
 
   useEffect(() => {
@@ -11,6 +14,7 @@ export function useCanvasZoom(containerRef: React.RefObject<HTMLDivElement | nul
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault()
       zoomAt(
+        canvasId,
         e.clientX - el.getBoundingClientRect().left,
         e.clientY - el.getBoundingClientRect().top,
         e.deltaY,
@@ -20,5 +24,5 @@ export function useCanvasZoom(containerRef: React.RefObject<HTMLDivElement | nul
 
     el.addEventListener("wheel", handleWheel, { passive: false })
     return () => el.removeEventListener("wheel", handleWheel)
-  }, [zoomAt, containerRef])
+  }, [zoomAt, containerRef, canvasId])
 }
