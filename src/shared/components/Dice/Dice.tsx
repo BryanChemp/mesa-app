@@ -8,13 +8,11 @@ type Props = {
   autoRoll?: boolean;
 };
 
-// Singleton do DiceBox para evitar múltiplas instâncias
 let diceInstance: DiceBox | null = null;
 let initializationPromise: Promise<void> | null = null;
 
 const initializeDiceBox = async (container: HTMLElement): Promise<DiceBox> => {
   if (diceInstance) {
-    // Se já existe uma instância, atualiza o container
     if (container && diceInstance.canvas.parentElement !== container) {
       container.appendChild(diceInstance.canvas);
     }
@@ -101,15 +99,12 @@ export default function Dice3D({ expression, onResult, rollKey, autoRoll = false
     };
   }, [onResult]);
 
-  // Rola automaticamente quando rollKey muda ou autoRoll é true
   useEffect(() => {
     if (autoRoll && isInitialized && expression && diceInstance) {
       console.log('Rolling automatically:', expression);
       
-      // Reset do resultado anterior
       setRollResult(undefined);
       
-      // Pequeno delay para garantir que tudo está pronto
       setTimeout(() => {
         if (diceInstance) {
           try {

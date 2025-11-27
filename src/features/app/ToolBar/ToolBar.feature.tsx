@@ -1,5 +1,7 @@
 import styled from "styled-components";
 import { useState } from "react";
+import { CharacterSheet } from "../../../shared/components/CharacterSheet/CharacterSheet";
+import { Inventory } from "../../../shared/components/Inventory/Inventory";
 
 interface ToolBarComponentProps {
   isMaster?: boolean;
@@ -71,8 +73,8 @@ export const ToolBar: React.FC<ToolBarComponentProps> = ({ isMaster = false }) =
       </Header>
       
       <ToolContent>
-        {currentView === 'ficha' && <FichaScreen />}
-        {currentView === 'inventario' && <InventarioScreen />}
+        {currentView === 'ficha' && <CharacterSheet characterId="1" />}
+        {currentView === 'inventario' && <Inventory />}
         {currentView === 'notas' && <NotasScreen />}
       </ToolContent>
     </Container>
