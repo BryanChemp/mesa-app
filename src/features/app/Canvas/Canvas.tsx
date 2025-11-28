@@ -19,11 +19,24 @@ const Canvas: FC<CanvasProps> = ({ id, children }) => {
   useCanvasZoom(containerRef, id)
   const { startDrag, stopDrag, onDrag } = useCanvasPan(id)
 
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    preventDefault(e);
+    startDrag(e);
+  }
+
+  const preventDefault = (e: React.MouseEvent) => {
+      if (e.button === 2) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+  }
+
   return (
     <Container
       ref={containerRef}
       tabIndex={0}
-      onMouseDown={startDrag}
+      onMouseDown={handleMouseDown}
       onMouseUp={stopDrag}
       onMouseLeave={stopDrag}
       onMouseMove={onDrag}

@@ -14,7 +14,7 @@ const getRandomColor = () => {
     '#a5d6a7', // Verde claro
     '#f48fb1', // Rosa
     '#ce93d8', // Roxo
-    '#80deea', // Ciano
+    '#80deea', // Ciano,
   ]
   return colors[Math.floor(Math.random() * colors.length)]
 }
@@ -33,9 +33,15 @@ export const Notes: React.FC = () => {
 
   const { screenToCanvas } = useCanvasStore()
 
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ 
+    x: number; 
+    y: number;
+    clientX: number;
+    clientY: number;
+  } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasContainerRef = useRef<HTMLDivElement>(null)
+  const contextMenuRef = useRef<HTMLDivElement>(null)
 
   // Fechar context menu ao clicar fora - AGORA SÓ NO CANVAS ATUAL
   useEffect(() => {
@@ -49,6 +55,34 @@ export const Notes: React.FC = () => {
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [contextMenu])
+
+  // Posicionar o context menu após o render
+  useEffect(() => {
+    if (contextMenu && contextMenuRef.current) {
+      const menuWidth = 200
+      const menuHeight = 120
+
+      let left = contextMenu.clientX
+      let top = contextMenu.clientY
+
+      // Verificar se o menu vai sair da tela à direita
+      if (left + menuWidth > window.innerWidth) {
+        left = contextMenu.clientX - menuWidth
+      }
+
+      // Verificar se o menu vai sair da tela na parte inferior
+      if (top + menuHeight > window.innerHeight) {
+        top = contextMenu.clientY - menuHeight
+      }
+
+      // Garantir que o menu não saia da tela à esquerda ou topo
+      left = Math.max(10, left)
+      top = Math.max(10, top)
+
+      contextMenuRef.current.style.left = `${left}px`
+      contextMenuRef.current.style.top = `${top}px`
     }
   }, [contextMenu])
 
@@ -70,20 +104,25 @@ export const Notes: React.FC = () => {
       setContextMenu({
         x: canvasCoords.x,
         y: canvasCoords.y,
+        clientX: e.clientX,
+        clientY: e.clientY
       })
     }
   }
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 0 && contextMenu) {
-      setContextMenu(null)
+    if (e.button === 0) {
+      // Clicar com botão esquerdo: desselecionar nota e fechar context menu
+      if (contextMenu) {
+        setContextMenu(null)
+      }
+      selectNote(null)
+      stopEditing()
     }
 
-    if (e.button === 2) {
-      if (!contextMenu) {
-        e.preventDefault()
-        e.stopPropagation()
-      }
+    if (e.button === 2 && !contextMenu) {
+      e.preventDefault()
+      e.stopPropagation()
     }
   }
 
@@ -134,12 +173,10 @@ export const Notes: React.FC = () => {
           completeConnection(noteId)
         } else {
           // Cancelar conexão se clicou na mesma nota
-          useNotesStore.getState().updateTempConnection(0, 0)
           useNotesStore.setState({ tempConnection: null })
         }
       } else {
         // Cancelar conexão se clicou em lugar nenhum
-        useNotesStore.getState().updateTempConnection(0, 0)
         useNotesStore.setState({ tempConnection: null })
       }
     }
@@ -149,6 +186,24 @@ export const Notes: React.FC = () => {
     { label: 'Adicionar Nota', action: handleAddNote, icon: '📝' },
     { label: 'Limpar Todas as Notas', action: handleClearAllNotes, icon: '🗑️' },
   ]
+
+  // Calcular pontos para a conexão temporária
+  const getTempConnectionPath = () => {
+    if (!tempConnection) return ''
+    
+    const fromNote = notes.find(n => n.id === tempConnection.fromNoteId)
+    if (!fromNote) return ''
+
+    const startX = fromNote.x + fromNote.width
+    const startY = fromNote.y + fromNote.height / 2
+    const endX = tempConnection.x
+    const endY = tempConnection.y
+
+    const midX = (startX + endX) / 2
+    const curveIntensity = 50
+
+    return `M ${startX} ${startY} C ${midX} ${startY - curveIntensity} ${midX} ${endY + curveIntensity} ${endX} ${endY}`
+  }
 
   return (
     <>
@@ -163,6 +218,7 @@ export const Notes: React.FC = () => {
             ref={canvasContainerRef}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            data-canvas-container="true"
           >
             {/* SVG para conexões - deve vir antes das notas para ficar atrás */}
             <ConnectionsSVG>
@@ -187,7 +243,7 @@ export const Notes: React.FC = () => {
               {/* Conexão temporária */}
               {tempConnection && (
                 <TempConnection
-                  d={`M ${tempConnection.x} ${tempConnection.y} L ${tempConnection.x} ${tempConnection.y}`}
+                  d={getTempConnectionPath()}
                   stroke="#dc3545"
                   strokeWidth="2"
                   strokeDasharray="5,5"
@@ -210,10 +266,7 @@ export const Notes: React.FC = () => {
 
       {contextMenu && (
         <ContextMenuWrapper
-          style={{ 
-            left: `calc(${contextMenu.x}px + 100px)`, 
-            top: `calc(${contextMenu.y}px + 50px)`
-          }}
+          ref={contextMenuRef}
           onMouseDown={(e) => e.stopPropagation()}
         >
           <ContextMenu>
@@ -299,9 +352,11 @@ const NoteWrapper = styled.div`
 
 // Context Menu Styles
 const ContextMenuWrapper = styled.div`
-  position: absolute;
+  position: fixed;
   z-index: 1000;
   pointer-events: auto;
+  left: 0;
+  top: 0;
 `
 
 const ContextMenu = styled.div`

@@ -34,6 +34,7 @@ interface NotesState {
   updateTempConnection: (x: number, y: number) => void
   completeConnection: (toNoteId: string) => void
   deleteConnection: (id: string) => void
+  recalculateConnections: (noteId?: string) => void
 }
 
 // Função para calcular pontos da curva
@@ -76,6 +77,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         note.id === id ? { ...note, ...updates } : note
       )
     }))
+    
+    // Recalcular conexões quando uma nota é movida
+    if (updates.x !== undefined || updates.y !== undefined) {
+      setTimeout(() => get().recalculateConnections(id), 0)
+    }
   },
 
   deleteNote: (id) => {
@@ -150,5 +156,26 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set((state) => ({
       connections: state.connections.filter((conn) => conn.id !== id)
     }))
+  },
+
+  recalculateConnections: (noteId?: string) => {
+    const { notes, connections } = get()
+    
+    const updatedConnections = connections.map(connection => {
+      const fromNote = notes.find(n => n.id === connection.fromNoteId)
+      const toNote = notes.find(n => n.id === connection.toNoteId)
+      
+      if (!fromNote || !toNote) return connection
+      
+      // Se noteId foi fornecido, só recalcula conexões relacionadas a essa nota
+      if (noteId && connection.fromNoteId !== noteId && connection.toNoteId !== noteId) {
+        return connection
+      }
+      
+      const newPoints = calculateCurvePoints(fromNote, toNote)
+      return { ...connection, points: newPoints }
+    })
+    
+    set({ connections: updatedConnections })
   }
 }))

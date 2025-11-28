@@ -45,10 +45,21 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
     e.stopPropagation()
     selectNote(note.id)
     
-    // Usar as coordenadas atuais da nota como offset
+    const containerRect = noteRef.current?.closest('[data-canvas-container]')?.getBoundingClientRect()
+    if (!containerRect || !noteRef.current) return
+
+    // Converter coordenadas do mouse para coordenadas do canvas
+    const mouseCanvasCoords = screenToCanvas(
+      canvasId, 
+      e.clientX - containerRect.left, 
+      e.clientY - containerRect.top, 
+      containerRect
+    )
+
+    // Calcular offset relativo à posição da nota no canvas
     setDragOffset({
-      x: e.clientX - note.x,
-      y: e.clientY - note.y
+      x: mouseCanvasCoords.x - note.x,
+      y: mouseCanvasCoords.y - note.y
     })
     setIsDragging(true)
   }
@@ -56,7 +67,6 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !noteRef.current) return
 
-    // Calcular nova posição baseada no mouse
     const containerRect = noteRef.current.closest('[data-canvas-container]')?.getBoundingClientRect()
     if (!containerRect) return
 
@@ -68,10 +78,14 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
       containerRect
     )
 
+    // Calcular nova posição baseada no offset
+    const newX = canvasCoords.x - dragOffset.x
+    const newY = canvasCoords.y - dragOffset.y
+
     // Atualizar posição da nota
     updateNote(note.id, { 
-      x: canvasCoords.x - dragOffset.x, 
-      y: canvasCoords.y - dragOffset.y 
+      x: newX, 
+      y: newY 
     })
   }, [isDragging, dragOffset, note.id, updateNote, screenToCanvas, canvasId])
 
@@ -118,11 +132,11 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
     const containerRect = noteRef.current.closest('[data-canvas-container]')?.getBoundingClientRect()
     if (!containerRect) return
 
-    // Calcular posição absoluta do ponto de conexão
+    // Calcular posição do ponto de conexão relativa ao canvas
     const pointX = pointType === 'left' ? note.x : note.x + note.width
     const pointY = note.y + note.height / 2
 
-    // Converter para coordenadas da tela
+    // Converter para coordenadas da tela (para a conexão temporária)
     const screenX = containerRect.left + pointX
     const screenY = containerRect.top + pointY
     
@@ -146,7 +160,6 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       data-note-id={note.id}
-      data-canvas-container="true"
     >
       {/* Pontos de conexão */}
       <ConnectionPoint

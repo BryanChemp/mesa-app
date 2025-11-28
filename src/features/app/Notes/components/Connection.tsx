@@ -48,7 +48,6 @@ const StyledPath = styled.path`
   stroke-width: 2;
   fill: none;
   marker-end: url(#arrowhead);
-  transition: all 0.2s ease;
 
   &:hover {
     stroke: #0056b3;
