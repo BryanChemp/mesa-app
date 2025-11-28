@@ -49,6 +49,7 @@ const StyledPath = styled.path`
   fill: none;
   marker-end: url(#arrowhead);
 
+
   &:hover {
     stroke: #0056b3;
     stroke-width: 3;
@@ -60,6 +61,7 @@ const ClickArea = styled.path`
   stroke-width: 20;
   fill: none;
   cursor: pointer;
+  transition: all 0.1s ease; /* Transição mais rápida */
 
   &:hover {
     stroke: rgba(0, 123, 255, 0.1);

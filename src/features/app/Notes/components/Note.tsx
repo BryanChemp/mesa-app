@@ -82,7 +82,7 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
     const newX = canvasCoords.x - dragOffset.x
     const newY = canvasCoords.y - dragOffset.y
 
-    // Atualizar posição da nota
+    // Atualizar posição da nota IMEDIATAMENTE
     updateNote(note.id, { 
       x: newX, 
       y: newY 
@@ -113,6 +113,18 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     updateNote(note.id, { content: e.target.value })
+    
+    // Auto-expandir a textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 2000)
+      textareaRef.current.style.height = `${newHeight}px`
+      
+      // Atualizar a altura da nota se estiver editando
+      if (newHeight > note.height) {
+        updateNote(note.id, { height: newHeight })
+      }
+    }
   }
 
   const handleBlur = () => {
@@ -144,7 +156,7 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
   }
 
   // Calcular posições dos pontos de conexão
-  const leftConnectionPoint = { x: 0, y: note.height / 2 }
+  const leftConnectionPoint = { x: -12, y: note.height / 2 }
   const rightConnectionPoint = { x: note.width, y: note.height / 2 }
 
   return (
@@ -189,10 +201,11 @@ export const Note: React.FC<NoteProps> = ({ note, canvasId }) => {
           value={note.content}
           onChange={handleContentChange}
           onBlur={handleBlur}
+          $height={note.height}
           autoFocus
         />
       ) : (
-        <NoteContent>{note.content}</NoteContent>
+        <NoteContent $height={note.height}>{note.content}</NoteContent>
       )}
       
       <NoteControls>
@@ -217,15 +230,16 @@ const NoteContainer = styled.div<{
   left: ${(props) => props.$x}px;
   top: ${(props) => props.$y}px;
   width: ${(props) => props.$width}px;
-  height: ${(props) => props.$height}px;
+  min-height: ${(props) => props.$height}px;
   background: ${(props) => props.$color};
   border: 2px solid ${(props) => (props.$isSelected ? '#007bff' : 'transparent')};
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   cursor: ${(props) => (props.$isDragging ? 'grabbing' : 'grab')};
-  transition: box-shadow 0.2s ease;
+  transition: transform 0.1s ease;
   user-select: none;
+  overflow: visible; /* Removido overflow: hidden */
 
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -236,8 +250,8 @@ const ConnectionPoint = styled.div<{ $x: number; $y: number }>`
   position: absolute;
   left: ${(props) => props.$x - 6}px;
   top: ${(props) => props.$y - 6}px;
-  width: 12px;
-  height: 12px;
+  width: 20px;
+  height: 20px;
   background: #007bff;
   border: 2px solid white;
   border-radius: 50%;
@@ -256,19 +270,21 @@ const ConnectionPoint = styled.div<{ $x: number; $y: number }>`
   }
 `
 
-const NoteContent = styled.div`
+const NoteContent = styled.div<{ $height: number }>`
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: ${(props) => props.$height}px;
+  overflow: visible; /* Removido overflow */
   word-wrap: break-word;
   font-size: 14px;
   line-height: 1.4;
   color: #333;
+  white-space: pre-wrap; /* Manter quebras de linha */
 `
 
-const NoteTextarea = styled.textarea`
+const NoteTextarea = styled.textarea<{ $height: number }>`
   width: 100%;
-  height: 100%;
+  min-height: ${(props) => props.$height}px;
+  max-height: 1000px;
   border: none;
   background: transparent;
   resize: none;
@@ -277,6 +293,13 @@ const NoteTextarea = styled.textarea`
   line-height: 1.4;
   font-family: inherit;
   color: #333;
+  overflow: ${(props) => props.$height >= 2000 ? 'auto' : 'hidden'}; /* Scroll só no máximo */
+  white-space: pre-wrap; /* Manter quebras de linha */
+
+  /* Auto-expand behavior */
+  &:focus {
+    overflow: ${(props) => props.$height >= 2000 ? 'auto' : 'hidden'};
+  }
 `
 
 const NoteControls = styled.div`

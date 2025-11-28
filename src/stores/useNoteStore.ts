@@ -72,16 +72,32 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   updateNote: (id, updates) => {
-    set((state) => ({
-      notes: state.notes.map((note) =>
+    set((state) => {
+      const updatedNotes = state.notes.map((note) =>
         note.id === id ? { ...note, ...updates } : note
       )
-    }))
-    
-    // Recalcular conexões quando uma nota é movida
-    if (updates.x !== undefined || updates.y !== undefined) {
-      setTimeout(() => get().recalculateConnections(id), 0)
-    }
+      
+      // Recalcular conexões IMEDIATAMENTE
+      const updatedConnections = state.connections.map(connection => {
+        const fromNote = updatedNotes.find(n => n.id === connection.fromNoteId)
+        const toNote = updatedNotes.find(n => n.id === connection.toNoteId)
+        
+        if (!fromNote || !toNote) return connection
+        
+        // Se a nota movida está relacionada a esta conexão
+        if (connection.fromNoteId === id || connection.toNoteId === id) {
+          const newPoints = calculateCurvePoints(fromNote, toNote)
+          return { ...connection, points: newPoints }
+        }
+        
+        return connection
+      })
+      
+      return {
+        notes: updatedNotes,
+        connections: updatedConnections
+      }
+    })
   },
 
   deleteNote: (id) => {
@@ -158,7 +174,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     }))
   },
 
+  // Esta função não é mais necessária pois as conexões são atualizadas automaticamente
   recalculateConnections: (noteId?: string) => {
+    // Função mantida para compatibilidade, mas a lógica foi movida para updateNote
     const { notes, connections } = get()
     
     const updatedConnections = connections.map(connection => {
@@ -167,7 +185,6 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       
       if (!fromNote || !toNote) return connection
       
-      // Se noteId foi fornecido, só recalcula conexões relacionadas a essa nota
       if (noteId && connection.fromNoteId !== noteId && connection.toNoteId !== noteId) {
         return connection
       }

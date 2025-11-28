@@ -46,6 +46,7 @@ const LeftColumn = styled.div`
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+  max-height: 100%;
   overflow: hidden;
 `;
 
@@ -56,6 +57,7 @@ const RightColumn = styled.div`
   gap: 16px;
   min-height: 0;
   overflow: hidden;
+  max-height: 100%;
 `;
 
 const BoardContainer = styled.div`
